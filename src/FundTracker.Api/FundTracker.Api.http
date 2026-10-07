@@ -1,0 +1,6 @@
+@FundTracker.Api_HostAddress = http://localhost:5228
+
+GET {{FundTracker.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
