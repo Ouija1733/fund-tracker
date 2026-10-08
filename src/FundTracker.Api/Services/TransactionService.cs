@@ -9,6 +9,7 @@ public interface ITransactionService
 {
     Task<PagedResult<TransactionDto>?> GetByFundAsync(int fundId, int page, int pageSize, CancellationToken ct);
     Task<TransactionDto?> CreateAsync(int fundId, CreateTransactionRequest request, CancellationToken ct);
+    Task<IReadOnlyList<FundFlowDto>> GetFlowsAsync(DateOnly from, DateOnly to, CancellationToken ct);
 }
 
 public class TransactionService(AppDbContext db) : ITransactionService
@@ -48,4 +49,22 @@ public class TransactionService(AppDbContext db) : ITransactionService
         return new TransactionDto(transaction.Id, transaction.ExternalId, transaction.InvestorName,
             transaction.Type, transaction.Amount, transaction.TradeDate);
     }
+
+    public async Task<IReadOnlyList<FundFlowDto>> GetFlowsAsync(DateOnly from, DateOnly to, CancellationToken ct) =>
+    await db.Transactions
+        .AsNoTracking()
+        .Where(t => t.TradeDate >= from && t.TradeDate <= to)
+        .GroupBy(t => new { t.FundId, t.Fund.Name })
+        .Select(g => new
+        {
+            g.Key.FundId,
+            g.Key.Name,
+            Subscriptions = g.Sum(t => t.Type == TransactionType.Subscription ? t.Amount : 0),
+            Redemptions = g.Sum(t => t.Type == TransactionType.Redemption ? t.Amount : 0),
+            Operations = g.Count()
+        })
+        .OrderByDescending(x => x.Subscriptions - x.Redemptions)
+        .Select(x => new FundFlowDto(x.FundId, x.Name, x.Subscriptions, x.Redemptions,
+            x.Subscriptions - x.Redemptions, x.Operations))
+        .ToListAsync(ct);
 }

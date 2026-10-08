@@ -13,3 +13,5 @@ public record CreateTransactionRequest(
     ParseLimitsInInvariantCulture = true,
     ConvertValueInInvariantCulture = true)] decimal Amount,
     DateOnly TradeDate);
+public record FundFlowDto(int FundId, string FundName, decimal Subscriptions,
+    decimal Redemptions, decimal NetFlow, int Operations);
