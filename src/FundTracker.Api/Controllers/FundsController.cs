@@ -41,4 +41,8 @@ public class FundsController(IFundService funds) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct) =>
         await funds.DeleteAsync(id, ct) ? NoContent() : NotFound();
+
+    [HttpGet("{id:int}/nav-history")]
+    public async Task<IReadOnlyList<NavPointDto>> NavHistory(int id, CancellationToken ct) =>
+        await funds.GetNavHistoryAsync(id, ct);
 }

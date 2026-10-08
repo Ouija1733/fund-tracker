@@ -13,6 +13,7 @@ public interface IFundService
     Task<FundDto> CreateAsync(CreateFundRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateFundRequest request, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
+    Task<IReadOnlyList<NavPointDto>> GetNavHistoryAsync(int fundId, CancellationToken ct);
 }
 
 public class FundService(AppDbContext db) : IFundService
@@ -76,4 +77,16 @@ public class FundService(AppDbContext db) : IFundService
 
     public async Task<bool> DeleteAsync(int id, CancellationToken ct) =>
         await db.Funds.Where(f => f.Id == id).ExecuteDeleteAsync(ct) > 0;
+
+    public async Task<IReadOnlyList<NavPointDto>> GetNavHistoryAsync(int fundId, CancellationToken ct) =>
+        await db.Database.SqlQuery<NavPointDto>($"""
+        SELECT
+            Date,
+            Value,
+            CAST((Value - LAG(Value) OVER (ORDER BY Date)) * 100.0
+                 / LAG(Value) OVER (ORDER BY Date) AS decimal(9, 4)) AS ChangePercent
+        FROM NavPrices
+        WHERE FundId = {fundId}
+        ORDER BY Date
+        """).ToListAsync(ct);
 }

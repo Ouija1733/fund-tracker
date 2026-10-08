@@ -16,3 +16,10 @@ public record UpdateFundRequest(
     [Required, StringLength(3, MinimumLength = 3)] string Currency);
 
 public record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
+
+public class NavPointDto
+{
+    public DateOnly Date { get; set; }
+    public decimal Value { get; set; }
+    public decimal? ChangePercent { get; set; }
+}
