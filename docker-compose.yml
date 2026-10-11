@@ -17,5 +17,24 @@ services:
             interval: 10s
             retries: 10
 
+    api:
+        build: ./src/FundTracker.Api
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            ApplyMigrations: "true"
+            ConnectionStrings__Default: "Server=db,1433;Database=FundTracker;User Id=sa;Password=FundTracker!2026;TrustServerCertificate=True"
+        ports:
+            - "5080:8080"
+        depends_on:
+            db:
+                condition: service_healthy
+
+    web:
+        build: ./client
+        ports:
+            - "3000:80"
+        depends_on:
+            - api
+
 volumes:
     sqldata:
